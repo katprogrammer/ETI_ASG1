@@ -14,11 +14,22 @@ import (
 )
 
 type Passenger struct {
-	PassengerID string `json:"Passenger Id"`
+	PassengerID string `json:"Passenger ID"`
 	FirstName   string `json:"First Name"`
 	LastName    string `json:"Last Name"`
-	PhoneNum    string `json:"Mobile Number"`
+	PhoneNum    string `json:"Phone Number"`
 	Email       string `json:"Email Address"`
+}
+
+type Trip struct {
+	TripID          string `json:"Trip ID"`
+	StartPostalCode string `json:"Start Postal Code"`
+	EndPostalCode   string `json:"End Postal Code"`
+	TripStatus      string `json:"Trip Status"`
+	StartTime       string `json:"Start Time"`
+	EndTime         string `json:"End Time"`
+	DriverID        string `json:"DriverID"`
+	PassengerID     string `json:"PassengerID"`
 }
 
 type AllPassenger struct {
@@ -26,6 +37,7 @@ type AllPassenger struct {
 }
 
 var passengerlist = map[string]Passenger{}
+var triplist = map[string]Trip{}
 
 func main() {
 	// Connect to Router
@@ -35,7 +47,10 @@ func main() {
 	router.HandleFunc("/api/v1/passenger/view/", getPassenger).Methods("GET")
 
 	// Create new Passenger Account
-	router.HandleFunc("/api/v1/passenger/{passengerid}", createPassenger).Methods("POST", "PUT")
+	router.HandleFunc("/api/v1/passenger/create/{passengerid}", createPassenger).Methods("POST")
+
+	// Update Passenger Account
+	router.HandleFunc("/api/v1/passenger/update/{passengerid}", updatePassenger).Methods("PUT")
 
 	// Create new Trip
 	router.HandleFunc("/api/v1/passenger/trip/{tripid}/{passengerid}/{driverid}", createTrip).Methods("GET", "POST")
@@ -70,7 +85,6 @@ func getPassenger(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("failed to scan")
 		}
-		fmt.Println("ID: ", p.PassengerID, "Passenger Name: ", p.FirstName, p.LastName, "Mobile Nomber:", p.PhoneNum, "Email:", p.Email)
 
 		passengerlist[p.PassengerID] = p
 	}
@@ -79,6 +93,16 @@ func getPassenger(w http.ResponseWriter, r *http.Request) {
 }
 
 func createPassenger(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+}
+
+func updatePassenger(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
 	if err != nil {
@@ -98,12 +122,34 @@ func createTrip(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// View Trips - Get all passenger's trips
 func getTrip(w http.ResponseWriter, r *http.Request) {
-
-	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
+	params := mux.Vars(r)
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer db.Close()
 
+	//Select all trips based on passenger id
+	results, err := db.Query("select * from Trips where PassengerId = ? ORDER BY StartTime Desc", params["passengerid"])
+	if err != nil {
+		fmt.Println(err)
+	}
+	for results.Next() {
+		var t Trip
+		var TripID string
+
+		err := results.Scan(&TripID, &t.StartPostalCode, &t.EndPostalCode, &t.TripStatus, &t.StartTime, &t.EndTime, &t.PassengerID, &t.DriverID)
+		if err != nil {
+			fmt.Println("failed to scan")
+			fmt.Println(err)
+		}
+
+		triplist[TripID] = t
+
+	}
+	data, _ := json.Marshal(map[string]map[string]Trip{"Trip": triplist})
+
+	fmt.Fprintf(w, "%s\n", data)
 }

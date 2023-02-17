@@ -143,7 +143,7 @@ func createDriver(w http.ResponseWriter, r *http.Request) {
 			nd := Driver{}
 			reqBody, _ := ioutil.ReadAll(r.Body)
 			json.Unmarshal(reqBody, &nd)
-			_, err := db.Exec("INSERT INTO Drivers Drivers (DriverID, FirstName, LastName, PhoneNum, Email, NRIC, LisenceNum, DriverStatus) values(?, ?, ?, ?, ?, ?, ?, ?)", driverID, nd.FirstName, nd.LastName, nd.PhoneNum, nd.Email, nd.NRIC, nd.LisenceNum, nd.DriverStatus)
+			_, err := db.Exec("INSERT INTO Drivers (DriverID, FirstName, LastName, PhoneNum, Email, NRIC, LisenceNum, DriverStatus) values(?, ?, ?, ?, ?, ?, ?, ?)", driverID, nd.FirstName, nd.LastName, nd.PhoneNum, nd.Email, nd.NRIC, nd.LisenceNum, nd.DriverStatus)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -180,7 +180,7 @@ func updateDriver(w http.ResponseWriter, r *http.Request) {
 			reqBody, _ := ioutil.ReadAll(r.Body)
 			json.Unmarshal(reqBody, &ud)
 			// Update the DB
-			_, err := db.Exec("UPDATE Drivers SET FirstName=?, LastName=?, PhoneNum=?, Email=?, NRIC=?, LisenceNum=?, DriverStatus=? WHERE DriverID=?", ud.FirstName, ud.LastName, ud.PhoneNum, ud.Email, ud.NRIC, ud.LisenceNum, ud.DriverStatus)
+			_, err := db.Exec("UPDATE Drivers SET FirstName=?, LastName=?, PhoneNum=?, Email=?, NRIC=?, LisenceNum=?, DriverStatus=? WHERE DriverID=?", ud.FirstName, ud.LastName, ud.PhoneNum, ud.Email, ud.NRIC, ud.LisenceNum, ud.DriverStatus, driverID)
 			if err != nil {
 				panic(err.Error())
 			}

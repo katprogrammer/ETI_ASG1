@@ -19,12 +19,27 @@ type Passenger struct {
 	PassengerID int    `json:"Passenger Id"`
 	FirstName   string `json:"First Name"`
 	LastName    string `json:"Last Name"`
-	PhoneNum    string `json:"Mobile Number"`
+	PhoneNum    string `json:"Phone Number"`
 	Email       string `json:"Email Address"`
 }
 
 type Passengers struct {
 	Passengers map[string]Passenger `json:"Passengers"`
+}
+
+type Driver struct {
+	DriverID     string `json:"Driver ID"`
+	FirstName    string `json:"First Name"`
+	LastName     string `json:"Last Name"`
+	PhoneNum     string `json:"Phone Number"`
+	Email        string `json:"Email"`
+	NRIC         string `json:"NRIC"`
+	LisenceNum   string `json:"License Number"`
+	DriverStatus string `json:"Driver Status"`
+}
+
+type Drivers struct {
+	Drivers map[string]Driver `json:"Drivers"`
 }
 
 type Trip struct {
@@ -87,6 +102,8 @@ outer:
 			getPassengerTrips()
 		case 9:
 			getPassenger()
+		case 10:
+			getDrivers()
 		default:
 			fmt.Println("Invalid Option!")
 
@@ -174,27 +191,29 @@ func getPassengerTrips() {
 
 func getDrivers() {
 
-	fmt.Println("\n")
-	fmt.Println("=== View All Passenger ===")
+	fmt.Print("\n")
+	fmt.Println("=== View All Drivers ===")
 
 	//connect to client
 	client := &http.Client{}
-
-	if req, err := http.NewRequest(http.MethodGet, "http://localhost:5000/api/v1/passenger/view/", nil); err == nil {
+	if req, err := http.NewRequest(http.MethodGet, "http://localhost:5000/api/v1/driver/view/", nil); err == nil {
 		if res, err := client.Do(req); err == nil {
 			if body, err := ioutil.ReadAll(res.Body); err == nil {
 
-				var res Passengers
+				var res Drivers
 
 				json.Unmarshal(body, &res)
-				fmt.Println("\n")
-				fmt.Println("=== Passenger Info ===")
-				for k, v := range res.Passengers {
-					fmt.Println("Passenger ID : ", k, " ")
+				fmt.Print("\n")
+				fmt.Println("=== Driver Info ===")
+				for k, v := range res.Drivers {
+					fmt.Println("Driver ID : ", k, " ")
 					fmt.Println("First Name : ", v.FirstName)
 					fmt.Println("Last Name : ", v.LastName)
-					fmt.Println("MobileNumber : ", v.PhoneNum)
+					fmt.Println("Phone Number : ", v.PhoneNum)
 					fmt.Println("Email : ", v.Email)
+					fmt.Println("NRIC : ", v.NRIC)
+					fmt.Println("Car License Number : ", v.LisenceNum)
+					fmt.Println("Status : ", v.DriverStatus)
 				}
 			} else {
 				fmt.Println(err)

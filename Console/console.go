@@ -100,6 +100,10 @@ outer:
 			updatePassenger()
 		case 4:
 			getPassengerTrips()
+		case 5:
+			createDriver()
+		case 6:
+			updateDriver()
 		case 9:
 			getPassenger()
 		case 10:
@@ -196,7 +200,7 @@ func getDrivers() {
 
 	//connect to client
 	client := &http.Client{}
-	if req, err := http.NewRequest(http.MethodGet, "http://localhost:5000/api/v1/driver/view/", nil); err == nil {
+	if req, err := http.NewRequest(http.MethodGet, "http://localhost:3000/api/v1/driver/view/", nil); err == nil {
 		if res, err := client.Do(req); err == nil {
 			if body, err := ioutil.ReadAll(res.Body); err == nil {
 
@@ -206,6 +210,7 @@ func getDrivers() {
 				fmt.Print("\n")
 				fmt.Println("=== Driver Info ===")
 				for k, v := range res.Drivers {
+					fmt.Print("\n")
 					fmt.Println("Driver ID : ", k, " ")
 					fmt.Println("First Name : ", v.FirstName)
 					fmt.Println("Last Name : ", v.LastName)
@@ -214,6 +219,7 @@ func getDrivers() {
 					fmt.Println("NRIC : ", v.NRIC)
 					fmt.Println("Car License Number : ", v.LisenceNum)
 					fmt.Println("Status : ", v.DriverStatus)
+					fmt.Print("\n")
 				}
 			} else {
 				fmt.Println(err)
@@ -278,6 +284,66 @@ func createPassenger() {
 
 }
 
+func createDriver() {
+
+	reader := bufio.NewReader(os.Stdin)
+
+	var nd Driver
+
+	fmt.Println("=== Create New Driver Account ===")
+	var randdid string
+	var randit int
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	randit = r.Intn(5000)
+	randdid = "D" + strconv.Itoa(randit)
+
+	fmt.Print("Enter First Name: ")
+	firstname, _ := reader.ReadString('\n')
+	nd.FirstName = strings.TrimSpace(firstname)
+
+	fmt.Print("Enter Last Name: ")
+	lastname, _ := reader.ReadString('\n')
+	nd.LastName = strings.TrimSpace(lastname)
+
+	fmt.Print("Enter Phone Number: ")
+	phonenum, _ := reader.ReadString('\n')
+	nd.PhoneNum = strings.TrimSpace(phonenum)
+
+	fmt.Print("Enter Email: ")
+	email, _ := reader.ReadString('\n')
+	nd.Email = strings.TrimSpace(email)
+
+	fmt.Print("Enter IC: ")
+	nric, _ := reader.ReadString('\n')
+	nd.NRIC = strings.TrimSpace(nric)
+
+	fmt.Print("Enter Car License: ")
+	lisencenum, _ := reader.ReadString('\n')
+	nd.LisenceNum = strings.TrimSpace(lisencenum)
+
+	nd.DriverStatus = "Available"
+
+	postBody, _ := json.Marshal(nd)
+	resBody := bytes.NewBuffer(postBody)
+
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPost, "http://localhost:3000/api/v1/driver/create/"+randdid, resBody); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Println("* Driver with ID: ", randdid, "created! *")
+			} else if res.StatusCode == 409 {
+				fmt.Println("* Error - Driver", randdid, "already exists! *")
+			}
+		} else {
+			fmt.Println(2, err)
+		}
+	} else {
+		fmt.Println(3, err)
+	}
+
+}
+
 // Function - Update Existing Passenger
 func updatePassenger() {
 
@@ -318,6 +384,64 @@ func updatePassenger() {
 				fmt.Println("* Passenger ", passengerid, " updated successfully! *")
 			} else if res.StatusCode == 404 {
 				fmt.Println("* Error - Passenger", passengerid, "does not exist! *")
+			}
+		} else {
+			fmt.Println(2, err)
+		}
+	} else {
+		fmt.Println(3, err)
+	}
+
+}
+
+func updateDriver() {
+
+	reader := bufio.NewReader(os.Stdin)
+
+	var ud Driver
+
+	fmt.Println("=== Update Driver Account Details ===")
+	fmt.Print("\n")
+	fmt.Print("Enter chosen Driver ID:")
+	var driverid string
+	fmt.Scanf("%v\n", &driverid)
+
+	fmt.Print("Enter First Name: ")
+	firstname, _ := reader.ReadString('\n')
+	ud.FirstName = strings.TrimSpace(firstname)
+
+	fmt.Print("Enter Last Name: ")
+	lastname, _ := reader.ReadString('\n')
+	ud.LastName = strings.TrimSpace(lastname)
+
+	fmt.Print("Enter Phone Number: ")
+	phonenum, _ := reader.ReadString('\n')
+	ud.PhoneNum = strings.TrimSpace(phonenum)
+
+	fmt.Print("Enter Email: ")
+	email, _ := reader.ReadString('\n')
+	ud.Email = strings.TrimSpace(email)
+
+	fmt.Print("Enter IC: ")
+	nric, _ := reader.ReadString('\n')
+	ud.NRIC = strings.TrimSpace(nric)
+
+	fmt.Print("Enter Car License: ")
+	lisencenum, _ := reader.ReadString('\n')
+	ud.LisenceNum = strings.TrimSpace(lisencenum)
+
+	ud.DriverStatus = "Available"
+
+	postBody, _ := json.Marshal(ud)
+
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/update/"+driverid, bytes.NewBuffer(postBody)); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Print("\n")
+				fmt.Println("* Driver", driverid, "updated successfully! *")
+			} else if res.StatusCode == 404 {
+				fmt.Println("* Error - Driver", driverid, "does not exist! *")
 			}
 		} else {
 			fmt.Println(2, err)

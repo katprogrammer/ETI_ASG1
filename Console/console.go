@@ -2,10 +2,17 @@ package main
 
 //Import
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Passenger struct {
@@ -72,6 +79,10 @@ outer:
 		case 0:
 			break outer
 		//Passenger
+		case 1:
+			createPassenger()
+		case 2:
+			updatePassenger()
 		case 4:
 			getPassengerTrips()
 		case 9:
@@ -104,7 +115,7 @@ func getPassenger() {
 					fmt.Println("Passenger ID : ", k, " ")
 					fmt.Println("First Name : ", v.FirstName)
 					fmt.Println("Last Name : ", v.LastName)
-					fmt.Println("MobileNumber : ", v.PhoneNum)
+					fmt.Println("Phone Number : ", v.PhoneNum)
 					fmt.Println("Email : ", v.Email)
 					fmt.Println("\n")
 
@@ -193,6 +204,107 @@ func getDrivers() {
 		}
 	} else {
 		fmt.Println(err)
+	}
+
+}
+func createPassenger() {
+
+	reader := bufio.NewReader(os.Stdin)
+
+	var np Passenger
+	fmt.Print("\n")
+	fmt.Println("=== New Passenger Creation ===")
+
+	var randpid string
+	var randit int
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	randit = r.Intn(100)
+	randpid = "P" + strconv.Itoa(randit)
+
+	fmt.Print("Enter First Name: ")
+	firstname, _ := reader.ReadString('\n')
+	np.FirstName = strings.TrimSpace(firstname)
+
+	fmt.Print("Enter Last Name: ")
+	lastname, _ := reader.ReadString('\n')
+	np.LastName = strings.TrimSpace(lastname)
+
+	fmt.Print("Enter Phone Number: ")
+	phonenum, _ := reader.ReadString('\n')
+	np.PhoneNum = strings.TrimSpace(phonenum)
+
+	fmt.Print("Enter Email: ")
+	email, _ := reader.ReadString('\n')
+	np.Email = strings.TrimSpace(email)
+
+	postBody, _ := json.Marshal(np)
+	resBody := bytes.NewBuffer(postBody)
+
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPost, "http://localhost:5000/api/v1/passenger/create/"+randpid, resBody); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Print("\n")
+				fmt.Println("* New Passenger with ID : ", randpid, " created! *")
+			} else if res.StatusCode == 409 {
+				fmt.Println("* Error - Passenger", randpid, "already exists! *")
+			}
+		} else {
+			fmt.Println(2, err)
+		}
+	} else {
+		fmt.Println(3, err)
+	}
+
+}
+
+// Function - Update Existing Passenger
+func updatePassenger() {
+
+	reader := bufio.NewReader(os.Stdin)
+
+	var updatePassenger Passenger
+
+	fmt.Print("\n")
+	fmt.Println("=== Update Passenger Details ===")
+	fmt.Print("\n")
+	fmt.Print("Enter chosen Passenger ID:")
+	var passengerid string
+	fmt.Scanf("%v\n", &passengerid)
+
+	fmt.Print("Enter First Name: ")
+	firstname, _ := reader.ReadString('\n')
+	updatePassenger.FirstName = strings.TrimSpace(firstname)
+
+	fmt.Print("Enter Last Name: ")
+	lastname, _ := reader.ReadString('\n')
+	updatePassenger.LastName = strings.TrimSpace(lastname)
+
+	fmt.Print("Enter Phone Number: ")
+	phonenum, _ := reader.ReadString('\n')
+	updatePassenger.PhoneNum = strings.TrimSpace(phonenum)
+
+	fmt.Print("Enter Email: ")
+	email, _ := reader.ReadString('\n')
+	updatePassenger.Email = strings.TrimSpace(email)
+
+	postBody, _ := json.Marshal(updatePassenger)
+
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPut, "http://localhost:5000/api/v1/passenger/update/"+passengerid, bytes.NewBuffer(postBody)); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Print("\n")
+				fmt.Println("* Passenger ", passengerid, " updated successfully! *")
+			} else if res.StatusCode == 404 {
+				fmt.Println("* Error - Passenger", passengerid, "does not exist! *")
+			}
+		} else {
+			fmt.Println(2, err)
+		}
+	} else {
+		fmt.Println(3, err)
 	}
 
 }

@@ -60,6 +60,9 @@ func main() {
 	// View all the drivers available in the database.
 	router.HandleFunc("/api/v1/driver/view/", getDriver).Methods("GET")
 
+	// View all the drivers trips in the database.
+	router.HandleFunc("/api/v1/driver/trips/{driverid}", getDriverTrips).Methods("GET")
+
 	//Create Driver Account
 	router.HandleFunc("/api/v1/driver/create/{driverid}", createDriver).Methods("POST")
 
@@ -305,7 +308,7 @@ func autoassigndriver(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get Trips assigned to driver
-func getdrivertrip(w http.ResponseWriter, r *http.Request) {
+func getDriverTrips(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
@@ -315,7 +318,7 @@ func getdrivertrip(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	results, err := db.Query("Select * from Trips where DriverId = ? AND TripStatus !='Completed'", params["driverid"])
+	results, err := db.Query("Select * from Trips where DriverID = ?", params["driverid"])
 	//db exec will return rows and primary key
 
 	if err != nil {

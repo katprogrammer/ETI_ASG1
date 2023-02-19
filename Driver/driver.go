@@ -66,7 +66,11 @@ func main() {
 	//Update Driver Account
 	router.HandleFunc("/api/v1/driver/update/{driverid}", updateDriver).Methods("PUT")
 
-	// Driver Status and Trip related
+	//Start Trip
+	router.HandleFunc("/api/v1/driver/start/{tripid}", startTrip).Methods("PUT")
+
+	//End Trip
+	router.HandleFunc("/api/v1/driver/end/{tripid}/{driverid}", endTrip).Methods("PUT")
 
 	//Port 3000
 	fmt.Println("Listening at port 3000")
@@ -189,4 +193,113 @@ func updateDriver(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusAccepted)
 		}
 	}
+}
+func startTrip(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var tripID = ""
+	tripID = params["tripid"]
+
+	if r.Method == "PUT" {
+		if body, err := ioutil.ReadAll(r.Body); err == nil {
+			var data Trip
+
+			if err := json.Unmarshal(body, &data); err == nil {
+
+				db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
+				if err != nil {
+					fmt.Println("Failed to connect to DB")
+					fmt.Println(err)
+				}
+				defer db.Close()
+
+				var tripstat string = "Started"
+
+				_, err = db.Exec("UPDATE Trips SET TripStatus=? WHERE TripID=?", tripstat, tripID)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println("Trip is currently ongoing")
+				}
+
+				w.WriteHeader(http.StatusAccepted) //202
+
+			} else {
+				w.WriteHeader(http.StatusNotFound) //404
+			}
+
+		}
+	}
+}
+func endTrip(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var tripID = ""
+	tripID = params["tripid"]
+
+	if r.Method == "PUT" {
+		if body, err := ioutil.ReadAll(r.Body); err == nil {
+			var data Trip
+
+			if err := json.Unmarshal(body, &data); err == nil {
+
+				db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
+				if err != nil {
+					fmt.Println("Failed to connect to DB")
+					fmt.Println(err)
+				}
+				defer db.Close()
+
+				var tripstat string = "Ended"
+
+				_, err = db.Exec("UPDATE Trips SET TripStatus=? WHERE TripID=?", tripstat, tripID)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println("Trip is currently ongoing")
+				}
+
+				w.WriteHeader(http.StatusAccepted) //202
+
+			} else {
+				w.WriteHeader(http.StatusNotFound) //404
+			}
+
+		}
+	}
+}
+
+// Get a Random Driver with Status Available
+func autoassigndriver(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/my_db")
+	if err != nil {
+		fmt.Println("failed to connect to db")
+	}
+	defer db.Close()
+
+	results, err := db.Query("SELECT * FROM Drivers WHere DriverStatus = 'Available' ORDER BY RAND() LIMIT 1")
+	if err != nil {
+		fmt.Println("failed to connect to insert")
+		fmt.Println(err)
+	} else {
+		fmt.Println("Connected succesfully")
+	}
+	for results.Next() {
+
+		var d Driver
+		var driverid string
+
+		err := results.Scan(&driverid, &d.FirstName, &d.LastName, &d.PhoneNum, &d.Email, &d.LisenceNum, &d.NRIC, &d.DriverStatus)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(&driverid)
+		}
+		newdriver[driverid] = d
+	}
+
+	data, _ := json.Marshal(map[string]map[string]Driver{"Selected Drivers": newdriver})
+	fmt.Fprintf(w, "%s\n", data)
+
 }

@@ -238,7 +238,16 @@ func endTrip(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var tripID = ""
 	tripID = params["tripid"]
-
+	var driverID = ""
+	tripID = params["driverid"]
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/driver_db")
+	if err != nil {
+		fmt.Println("Failed to connect to DB")
+		fmt.Println(err)
+	}
+	defer db.Close()
+	var driverstat string = "Available"
+	_, err = db.Exec("UPDATE Drivers SET DriverStatus=? WHERE DriverID=?", driverstat, driverID)
 	if r.Method == "PUT" {
 		if body, err := ioutil.ReadAll(r.Body); err == nil {
 			var data Trip

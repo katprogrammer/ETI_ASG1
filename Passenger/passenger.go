@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -183,13 +184,47 @@ func updatePassenger(w http.ResponseWriter, r *http.Request) {
 }
 
 func createTrip(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 
-	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
-	if err != nil {
-		fmt.Println(err)
+	if r.Method == "POST" {
+		if body, err := ioutil.ReadAll(r.Body); err == nil {
+			var data Trip
+			if err := json.Unmarshal(body, &data); err == nil {
+				var passengerID = ""
+				passengerID = params["passengerid"]
+				db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
+				if err != nil {
+					fmt.Println(err)
+				}
+				defer db.Close()
+				populatePassenger(db)
+				_, exists := passengerlist[passengerID]
+				if exists {
+					//create trip if passenger is not currently in an ongoing trip
+					w.WriteHeader(http.StatusAccepted) //202
+					db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
+					if err != nil {
+						fmt.Println("failed to connect to db")
+					}
+					defer db.Close()
+
+					var triptime = time.Now()
+
+					_, err = db.Exec("INSERT into Trips (TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime, EndTime, PassengerID, DriverID) VALUES (?,?,?,?,?,?,?,?)", params["tripid"], data.StartPostalCode, data.EndPostalCode, data.TripStatus, triptime, params["passengerid"], params["driverid"])
+					if err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Println("New Trip Added")
+					}
+				} else {
+					//if passenger not found, prompt to create passenger first
+					fmt.Println("Please create a Passenger First!")
+					w.WriteHeader(http.StatusNotFound) //404
+
+				}
+			}
+		}
 	}
-	defer db.Close()
-
 }
 
 // View Trips - Get all passenger's trips

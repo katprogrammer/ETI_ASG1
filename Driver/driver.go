@@ -303,3 +303,40 @@ func autoassigndriver(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s\n", data)
 
 }
+
+// Get Trips assigned to driver
+func getdrivertrip(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
+	if err != nil {
+		fmt.Println("Failed to connect to DB")
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	results, err := db.Query("Select * from Trips where DriverId = ? AND TripStatus !='Completed'", params["driverid"])
+	//db exec will return rows and primary key
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	drivertriplist = map[string]Trip{}
+
+	for results.Next() {
+		var t Trip
+		var tripid string
+
+		err := results.Scan(&tripid, &t.StartPostalCode, &t.EndPostalCode, &t.TripStatus, &t.StartTime, &t.EndTime, &t.PassengerID, &t.DriverID)
+		if err != nil {
+			fmt.Println("failed to scan")
+		}
+		fmt.Println("ID no.: ", tripid, "Pick-Up Code:", t.StartPostalCode, "Drop-Off Code:", t.EndPostalCode, "Trip Status:", t.TripStatus, "Driver ID:", &t.DriverID)
+
+		drivertriplist[tripid] = t
+	}
+
+	data, _ := json.Marshal(map[string]map[string]Trip{"Driver's Trips": drivertriplist})
+	fmt.Fprintf(w, "%s\n", data)
+
+}

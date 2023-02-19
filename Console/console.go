@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -41,6 +42,9 @@ type Driver struct {
 type Drivers struct {
 	Drivers map[string]Driver `json:"Drivers"`
 }
+
+var randomdriver Driver
+var randomdriverid string
 
 type Trip struct {
 	TripID          string `json:"Trip ID"`
@@ -454,6 +458,101 @@ func updateDriver() {
 		fmt.Println(3, err)
 	}
 
+}
+
+// Function - Create Trip Request, get single random Available driver, create trip record, update driver status to Busy
+func createTrip() {
+
+	resp, err := http.Get("http://localhost:3000/api/v1/drivers/")
+	if err != nil {
+		fmt.Println("All Drivers are busy")
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var assigndriver map[string]map[string]Driver
+	json.Unmarshal([]byte(body), &assigndriver)
+
+	for key, element := range assigndriver["Selected Drivers"] {
+		randomdriverid = key
+		randomdriver = element
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+
+	if len(randomdriverid) != 0 {
+		var newtrip Trip
+
+		var randtripid string
+		var randit int
+		source := rand.NewSource(time.Now().UnixNano())
+		r := rand.New(source)
+		randit = r.Intn(10000)
+		randtripid = "T" + strconv.Itoa(randit)
+
+		fmt.Print("Enter Passenger ID : ")
+		var passengerid string
+		fmt.Scanf("%v\n", &passengerid)
+
+		fmt.Print("Enter Pickup Code: ")
+		inputf, _ := reader.ReadString('\n')
+		newtrip.StartPostalCode = strings.TrimSpace(inputf)
+
+		fmt.Print("Enter Dropoff Code: ")
+		inputl, _ := reader.ReadString('\n')
+		newtrip.EndPostalCode = strings.TrimSpace(inputl)
+
+		newtrip.TripStatus = "Accepted"
+
+		newtrip.DriverID = randomdriverid
+
+		postBody, _ := json.Marshal(newtrip)
+		resBody := bytes.NewBuffer(postBody)
+
+		client := &http.Client{}
+		if req, err := http.NewRequest(http.MethodPost, "http://localhost:5000/api/v1/passenger/trip/"+randtripid+"/"+passengerid+"/"+randomdriverid, resBody); err == nil {
+			if res, err := client.Do(req); err == nil {
+				if res.StatusCode == 202 {
+					fmt.Println("* New Trip:", randtripid, "created successfully! *")
+
+					var updateBusy Driver
+
+					updateBusy.DriverStatus = "Busy"
+
+					driverpostBody, _ := json.Marshal(updateBusy)
+
+					if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/status/offline/"+randomdriverid, bytes.NewBuffer(driverpostBody)); err == nil {
+
+						if res, err := client.Do(req); err == nil {
+							if res.StatusCode == 202 {
+								fmt.Println("* A new driver is assigned to your trip! * ")
+							} else if res.StatusCode == 404 {
+								fmt.Println("* Driver does not exist! * ")
+							}
+						} else {
+							fmt.Println(2, err)
+						}
+					} else {
+						fmt.Println(3, err)
+					}
+				} else if res.StatusCode == 409 {
+					fmt.Println("*** Error - Passenger", passengerid, "already in Ongoing Trip! *** ")
+				} else if res.StatusCode == 404 {
+					fmt.Println("*** Error - Passenger", passengerid, "does not exist! *** ")
+				}
+			} else {
+				fmt.Println(2, err)
+			}
+		} else {
+			fmt.Println(3, err)
+		}
+
+	} else {
+
+		fmt.Print("* No Drivers Available at the moment! *")
+	}
 }
 
 // Function - Start a Trip, prompt for driver and trip id, change trip status to ongoing

@@ -31,7 +31,13 @@ INSERT INTO Trips(TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime,
 VALUES("T5",246815,912367,'Ended','2022-12-17 19:32:04','2022-12-17 19:33:00',"P1","D1");
 
 INSERT INTO Trips(TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime, EndTime, PassengerID, DriverID)
-VALUES("T6",901203,776309,'Ended','2022-12-18 10:59:39','2022-12-18 10:59:54',"P2","D1");
+VALUES("T6",344553,909091,'Ended','2022-12-18 10:59:39','2022-12-18 10:59:54',"P2","D1");
+
+INSERT INTO Trips(TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime, EndTime, PassengerID, DriverID)
+VALUES("T7",567813,736489,'Requested','2022-12-15 19:32:04','2022-12-15 21:33:00',"P1","D1");
+
+INSERT INTO Trips(TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime, EndTime, PassengerID, DriverID)
+VALUES("T8",991283,348929,'Requested','2022-12-16 10:59:39','2022-12-16 13:59:54',"P2","D2");
 
  select * from trips
 

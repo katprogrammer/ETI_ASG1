@@ -74,7 +74,7 @@ outer:
 			"5)  Create Driver Account\n",  //create new driver, driver status default set to busy
 			"6)  Update Account Details\n", //update all existing driver information, except for IcNo.
 			"7)  Start Trip\n",             //update status to unavailable
-			"8) End Trip\n",                //update status to available
+			"8)  End Trip\n",               //update status to available
 			"\n",
 			"\n",
 			"-----Admin Menu-----\n",
@@ -104,6 +104,10 @@ outer:
 			createDriver()
 		case 6:
 			updateDriver()
+		case 7:
+			startTrip()
+		case 8:
+			endTrip()
 		case 9:
 			getPassenger()
 		case 10:
@@ -448,6 +452,103 @@ func updateDriver() {
 		}
 	} else {
 		fmt.Println(3, err)
+	}
+
+}
+
+// Function - Start a Trip, prompt for driver and trip id, change trip status to ongoing
+func startTrip() {
+
+	var updateTrip Trip
+	var driverid string
+	var tripid string
+	viewDriverTrips()
+	fmt.Scanf("%v\n", &driverid)
+	fmt.Print("Enter Trip ID : ")
+	fmt.Scanf("%v\n", &tripid)
+
+	fmt.Print("Changing Status...")
+
+	updateTrip.TripStatus = "Started"
+
+	postBody, _ := json.Marshal(updateTrip)
+
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/start/"+tripid, bytes.NewBuffer(postBody)); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Println("* Trip", tripid, "has started! *")
+			} else if res.StatusCode == 404 {
+				fmt.Println("Error - Driver", driverid, "does not exist")
+			}
+		} else {
+			fmt.Println(2, err)
+		}
+	} else {
+		fmt.Println(3, err)
+	}
+
+}
+
+// Function - End a Trip, prompt for driver and trip id, change trip status to completed
+func endTrip() {
+	var updateTrip Trip
+
+	var driverid string
+	var tripid string
+
+	viewDriverTrips()
+	fmt.Print("Enter Trip ID : ")
+	fmt.Scanf("%v\n", &tripid)
+
+	fmt.Print("Changing Status...")
+
+	updateTrip.TripStatus = "Ended"
+
+	postBody, _ := json.Marshal(updateTrip)
+
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/end/"+tripid+"/"+driverid, bytes.NewBuffer(postBody)); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Println("* Trip", tripid, "has ended! *")
+			} else if res.StatusCode == 404 {
+				fmt.Println("Error - Driver", driverid, "does not exist")
+			}
+		} else {
+			fmt.Println(2, err)
+		}
+	} else {
+		fmt.Println(3, err)
+	}
+
+}
+func viewDriverTrips() {
+
+	var driverid string
+	fmt.Print("Please enter Driver ID to view trips: ")
+	fmt.Scanf("%v\n", &driverid)
+
+	client := &http.Client{}
+
+	if req, err := http.NewRequest(http.MethodGet, "http://localhost:3000/api/v1/driver/trips/"+driverid, nil); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if body, err := ioutil.ReadAll(res.Body); err == nil {
+
+				var res map[string]map[string]Trip
+
+				json.Unmarshal(body, &res)
+
+				fmt.Println("=== Trip Info ===")
+				for k, v := range res["Driver's Trips"] {
+
+					fmt.Println("Trip ID : ", k, " ")
+					fmt.Println("Pickup Code : ", v.StartPostalCode)
+					fmt.Println("Dropoff Code : ", v.EndPostalCode)
+					fmt.Println("Trip Status : ", v.TripStatus)
+				}
+			}
+		}
 	}
 
 }

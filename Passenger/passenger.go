@@ -237,7 +237,7 @@ func getTrip(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	//Select all trips based on passenger id
-	results, err := db.Query("select * from Trips where PassengerId = ? ORDER BY StartTime Desc", params["passengerid"])
+	results, err := db.Query("select * from Trips where PassengerID = ? ORDER BY StartTime Desc", params["passengerid"])
 	if err != nil {
 		fmt.Println(err)
 	}

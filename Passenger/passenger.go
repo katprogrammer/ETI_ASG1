@@ -221,28 +221,6 @@ func createTrip(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("failed to connect to db")
 				}
 				defer db.Close()
-				// // Get Assigned Driver From Driver API
-				// assignedDriverMap := map[string]Driver{}
-				// resp, err := http.Get("http://localhost:3000/api/v1/drivers/")
-				// if err != nil {
-				// 	log.Fatalln(err)
-				// }
-				// body, err := ioutil.ReadAll(resp.Body)
-				// if err != nil {
-				// 	log.Fatalln(err)
-				// }
-				// // Add JSON to Driver Struct
-				// json.Unmarshal([]byte(body), &assignedDriverMap)
-
-				// // Extract Assigned Driver Data
-				// var assignedDriverID string
-				// var assignedDriver Driver
-
-				// for key, element := range assignedDriverMap {
-				// 	assignedDriverID = key
-				// 	assignedDriver = element
-				// }
-
 				var triptime = time.Now()
 				var endTime = time.Now().Add(time.Hour * 5)
 				var tripstat = "Requested"
@@ -254,18 +232,7 @@ func createTrip(w http.ResponseWriter, r *http.Request) {
 
 					fmt.Println("New Trip Added")
 				}
-				// data, err := json.Marshal(map[string]Driver{assignedDriverID: assignedDriver})
-				// if err != nil {
-				// 	log.Fatal(err)
-				// }
-				// fmt.Println(assignedDriver.FirstName)
 				fmt.Fprintf(w, "%s\n", data)
-				// } else {
-				// 	//if passenger not found, prompt to create passenger first
-				// 	fmt.Println("Please create a Passenger First!")
-				// 	w.WriteHeader(http.StatusNotFound) //404
-
-				// }
 			}
 		}
 	}

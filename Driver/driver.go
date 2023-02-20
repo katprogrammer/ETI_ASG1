@@ -69,6 +69,12 @@ func main() {
 	//Update Driver Account
 	router.HandleFunc("/api/v1/driver/update/{driverid}", updateDriver).Methods("PUT")
 
+	//Update Driver Status
+	router.HandleFunc("/api/v1/driver/update/{driverid}/occupied", updateDriverStatus).Methods("PUT")
+
+	//Assign Driver
+	router.HandleFunc("/api/v1/drivers/", autoassigndriver)
+
 	//Start Trip
 	router.HandleFunc("/api/v1/driver/start/{tripid}", startTrip).Methods("PUT")
 
@@ -197,6 +203,34 @@ func updateDriver(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func updateDriverStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	params := mux.Vars(r)
+	// Retrieves the driverid specified in the API Endpoint which will be used to either Get, Post or Put.
+	var driverID = ""
+	driverID = params["driverid"]
+
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/driver_db")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+	populateDriver(db)
+	_, exists := driverlist[driverID]
+	if exists {
+		if r.Method == "PUT" {
+			// Update the DB
+			var driverstat = "Occupied"
+			_, err := db.Exec("UPDATE Drivers SET DriverStatus=? WHERE DriverID=?", driverstat, driverID)
+			if err != nil {
+				panic(err.Error())
+			}
+			w.WriteHeader(http.StatusAccepted)
+		}
+	}
+}
+
 func startTrip(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var tripID = ""
@@ -238,16 +272,16 @@ func endTrip(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var tripID = ""
 	tripID = params["tripid"]
-	var driverID = ""
-	tripID = params["driverid"]
-	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/driver_db")
-	if err != nil {
-		fmt.Println("Failed to connect to DB")
-		fmt.Println(err)
-	}
-	defer db.Close()
-	var driverstat string = "Available"
-	_, err = db.Exec("UPDATE Drivers SET DriverStatus=? WHERE DriverID=?", driverstat, driverID)
+	// var driverID = ""
+	// driverID = params["driverid"]
+	// db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/driver_db")
+	// if err != nil {
+	// 	fmt.Println("Failed to connect to DB")
+	// 	fmt.Println(err)
+	// }
+	// defer db.Close()
+	// var driverstat string = "Available"
+	// _, err = db.Exec("UPDATE Drivers SET DriverStatus=? WHERE DriverID=?", driverstat, driverID)
 	if r.Method == "PUT" {
 		if body, err := ioutil.ReadAll(r.Body); err == nil {
 			var data Trip
@@ -261,16 +295,14 @@ func endTrip(w http.ResponseWriter, r *http.Request) {
 				}
 				defer db.Close()
 
-				var tripstat string = "Ended"
+				// var tripstat string = "Ended"
+				fmt.Print(data.TripStatus)
 
-				_, err = db.Exec("UPDATE Trips SET TripStatus=? WHERE TripID=?", tripstat, tripID)
+				_, err = db.Exec("UPDATE Trips SET TripStatus=? WHERE TripID=?", data.TripStatus, tripID)
 
 				if err != nil {
 					fmt.Println(err)
-				} else {
-					fmt.Println("Trip is currently ongoing")
 				}
-
 				w.WriteHeader(http.StatusAccepted) //202
 
 			} else {
@@ -284,13 +316,13 @@ func endTrip(w http.ResponseWriter, r *http.Request) {
 // Get a Random Driver with Status Available
 func autoassigndriver(w http.ResponseWriter, r *http.Request) {
 
-	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/my_db")
+	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/driver_db")
 	if err != nil {
 		fmt.Println("failed to connect to db")
 	}
 	defer db.Close()
 
-	results, err := db.Query("SELECT * FROM Drivers WHere DriverStatus = 'Available' ORDER BY RAND() LIMIT 1")
+	results, err := db.Query("SELECT * FROM Drivers Where DriverStatus = 'Available' ORDER BY RAND() LIMIT 1")
 	if err != nil {
 		fmt.Println("failed to connect to insert")
 		fmt.Println(err)
@@ -302,16 +334,16 @@ func autoassigndriver(w http.ResponseWriter, r *http.Request) {
 		var d Driver
 		var driverid string
 
-		err := results.Scan(&driverid, &d.FirstName, &d.LastName, &d.PhoneNum, &d.Email, &d.LisenceNum, &d.NRIC, &d.DriverStatus)
+		err := results.Scan(&d.DriverID, &d.FirstName, &d.LastName, &d.PhoneNum, &d.Email, &d.NRIC, &d.LisenceNum, &d.DriverStatus)
 		if err != nil {
 			fmt.Println(err)
 		} else {
 			fmt.Println(&driverid)
 		}
-		newdriver[driverid] = d
+		newdriver[d.DriverID] = d
 	}
 
-	data, _ := json.Marshal(map[string]map[string]Driver{"Selected Drivers": newdriver})
+	data, _ := json.Marshal(map[string]map[string]Driver{"Selected driver": newdriver})
 	fmt.Fprintf(w, "%s\n", data)
 
 }

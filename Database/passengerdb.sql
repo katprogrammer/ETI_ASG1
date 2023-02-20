@@ -16,5 +16,5 @@ INSERT INTO Passengers (PassengerID, FirstName, LastName, PhoneNum, Email) VALUE
 INSERT INTO Passengers (PassengerID, FirstName, LastName, PhoneNum, Email) VALUES ("P2","Charis","Tang","91345690","charistang@hotmail.com");
 INSERT INTO Passengers (PassengerID, FirstName, LastName, PhoneNum, Email) VALUES ("P3","Mike","Wee","98901234","mikewee@gmail.com");
 
-select * from passengers
+SELECT * FROM Passengers
 

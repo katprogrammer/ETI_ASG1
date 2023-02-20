@@ -46,6 +46,26 @@ Domain-driven design can be implemented for a ride-sharing platform by identifyi
 
 ## API Documentation
 *** 
+### Passenger Microservice
+
+##### Endpoints:
+* GET /api/v1/passenger/view: Returns a list of all the passengers.
+* POST /api/v1/passenger/create/{passengerid}: Adds a new passenger record in the MySQL database with the specified passenger ID and their FirstName, LastName, PhoneNumber, and Email. Their new account will then be accessible from the menu.
+* PUT /api/v1/passenger/update/{passengerid}: Updates passenger account details in the MySQL database based on the specified passengerID and updates their FirstName, LastName, MobileNumber, and Email. The menu will then display the updated details.
+* POST /api/v1/passenger/trip/{tripid}/{passengerid}/{driverid}: Creates a new trip record for the specified passenger. A random available driver is assigned to the ride created and their status is set to 'Occupied.
+* GET /api/v1/trip/{passengerid}: Returns a list of all the passenger's trips in reverse chronological order.
+
+### Driver Microservice
+
+##### Endpoints:
+* GET /api/v1/driver/view: Returns a list of all the drivers.
+* GET /api/v1/driver/trips/{driverid}: Returns a list of all the driver's trips.
+* POST /api/v1/driver/create/{driverid}: Adds a new driver record in the MySQL database with the specified driver ID and their FirstName, LastName, PhoneNumber, NRIC, Vehicle lisence number and Email. Their new account will then be accessible from the menu.
+* PUT /api/v1/driver/update/{driverid}: Updates driver account details in the MySQL database based on the specified driverID and updates their FirstName, LastName, NRIC, Vehicle lisence number and Email. The menu will then display the updated details.
+* PUT /api/v1/driver/update/{driverid}/occupied: Updates driver status automatically to occupied after starting a trip.
+* PUT /api/v1/driver/start/{tripid}: Updates trip status to "Started" after starting a trip.
+* PUT /api/v1/driver/end/{tripid}/{driverid}: Updates trip status to "Ended" after ending a trip and updates the driver status to "Available"
+* /api/v1/drivers: Auto assigns a driver to a trip after the passenger has requested a trip and input the pick up and drop off postal codes.
 
 ## Instructions to set-up and run microservices
 *** 

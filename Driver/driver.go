@@ -54,7 +54,6 @@ var newdriver = map[string]Driver{}
 
 func main() {
 	// Connect to Router
-	// Connect to Router
 	router := mux.NewRouter()
 
 	// View all the drivers available in the database.

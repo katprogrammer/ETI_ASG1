@@ -102,6 +102,8 @@ outer:
 			createPassenger()
 		case 2:
 			updatePassenger()
+		case 3:
+			createTrip()
 		case 4:
 			getPassengerTrips()
 		case 5:
@@ -462,7 +464,6 @@ func updateDriver() {
 
 // Function - Create Trip Request, get single random Available driver, create trip record, update driver status to Busy
 func createTrip() {
-
 	resp, err := http.Get("http://localhost:3000/api/v1/drivers/")
 	if err != nil {
 		fmt.Println("All Drivers are busy")
@@ -475,83 +476,82 @@ func createTrip() {
 	var assigndriver map[string]map[string]Driver
 	json.Unmarshal([]byte(body), &assigndriver)
 
-	for key, element := range assigndriver["Selected Drivers"] {
+	for key, element := range assigndriver["Selected driver"] {
 		randomdriverid = key
 		randomdriver = element
+		fmt.Print(element.DriverID)
 	}
-
 	reader := bufio.NewReader(os.Stdin)
+	var newtrip Trip
+	var randtripid string
+	var randit int
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	randit = r.Intn(10000)
+	randtripid = "T" + strconv.Itoa(randit)
 
-	if len(randomdriverid) != 0 {
-		var newtrip Trip
+	fmt.Print("Enter Passenger ID : ")
+	var passengerid string
+	fmt.Scanf("%v\n", &passengerid)
 
-		var randtripid string
-		var randit int
-		source := rand.NewSource(time.Now().UnixNano())
-		r := rand.New(source)
-		randit = r.Intn(10000)
-		randtripid = "T" + strconv.Itoa(randit)
+	fmt.Print("Enter Pickup Code: ")
+	pickupcode, _ := reader.ReadString('\n')
+	newtrip.StartPostalCode = strings.TrimSpace(pickupcode)
 
-		fmt.Print("Enter Passenger ID : ")
-		var passengerid string
-		fmt.Scanf("%v\n", &passengerid)
+	fmt.Print("Enter Dropoff Code: ")
+	dropoffcode, _ := reader.ReadString('\n')
+	newtrip.EndPostalCode = strings.TrimSpace(dropoffcode)
 
-		fmt.Print("Enter Pickup Code: ")
-		inputf, _ := reader.ReadString('\n')
-		newtrip.StartPostalCode = strings.TrimSpace(inputf)
+	newtrip.TripStatus = "Requested"
 
-		fmt.Print("Enter Dropoff Code: ")
-		inputl, _ := reader.ReadString('\n')
-		newtrip.EndPostalCode = strings.TrimSpace(inputl)
+	postBody, _ := json.Marshal(newtrip)
+	resBody := bytes.NewBuffer(postBody)
+	client := &http.Client{}
+	if req, err := http.NewRequest(http.MethodPost, "http://localhost:5000/api/v1/passenger/trip/"+randtripid+"/"+passengerid+"/"+randomdriverid, resBody); err == nil {
+		if res, err := client.Do(req); err == nil {
+			if res.StatusCode == 202 {
+				fmt.Println("* New Trip:", randtripid, "created successfully! *")
 
-		newtrip.TripStatus = "Accepted"
+				// var updateBusy Driver
 
-		newtrip.DriverID = randomdriverid
+				// updateBusy.DriverStatus = "Occupied"
 
-		postBody, _ := json.Marshal(newtrip)
-		resBody := bytes.NewBuffer(postBody)
+				// driverpostBody, _ := json.Marshal(updateBusy)
 
-		client := &http.Client{}
-		if req, err := http.NewRequest(http.MethodPost, "http://localhost:5000/api/v1/passenger/trip/"+randtripid+"/"+passengerid+"/"+randomdriverid, resBody); err == nil {
-			if res, err := client.Do(req); err == nil {
-				if res.StatusCode == 202 {
-					fmt.Println("* New Trip:", randtripid, "created successfully! *")
+				// if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/update/"+randomdriverid+"/occupied", bytes.NewBuffer(driverpostBody)); err == nil {
 
-					var updateBusy Driver
+				// 	if res, err := client.Do(req); err == nil {
+				// 		if res.StatusCode == 202 {
+				// 			if len(assignDriver) != 0 {
+				// 				// Print Assigned Driver Details
+				// 				fmt.Println("\nSearch Complete!\n\n==========\nRide Details\n==========")
+				// 				for _, element := range assignDriver {
+				// 					fmt.Println("Driver Name: " + element.FirstName + " " + element.LastName + "\nMobile Number: " + element.PhoneNum + "\nEmail: " + element.Email + "\nCar License: " + element.LisenceNum + "\n\nPick-Up Postal Code: " + pickupcode + "\nDrop-Off Postal Code: " + dropoffcode)
+				// 				}
+				// 				fmt.Println("\nYour Driver will Arrive Shortly. Press any Key to Continue...")
+				// 				fmt.Scanln() // Wait for Keypress
 
-					updateBusy.DriverStatus = "Busy"
-
-					driverpostBody, _ := json.Marshal(updateBusy)
-
-					if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/status/offline/"+randomdriverid, bytes.NewBuffer(driverpostBody)); err == nil {
-
-						if res, err := client.Do(req); err == nil {
-							if res.StatusCode == 202 {
-								fmt.Println("* A new driver is assigned to your trip! * ")
-							} else if res.StatusCode == 404 {
-								fmt.Println("* Driver does not exist! * ")
-							}
-						} else {
-							fmt.Println(2, err)
-						}
-					} else {
-						fmt.Println(3, err)
-					}
-				} else if res.StatusCode == 409 {
-					fmt.Println("*** Error - Passenger", passengerid, "already in Ongoing Trip! *** ")
-				} else if res.StatusCode == 404 {
-					fmt.Println("*** Error - Passenger", passengerid, "does not exist! *** ")
-				}
-			} else {
-				fmt.Println(2, err)
+				// 			}
+				// 			fmt.Println("* A new driver is assigned to your trip! * ")
+				// 		} else if res.StatusCode == 404 {
+				// 			fmt.Println("* Driver does not exist! * ")
+				// 		}
+				// 	} else {
+				// 		fmt.Println(2, err)
+				// 	}
+				// } else {
+				// 	fmt.Println(3, err)
+				// }
+			} else if res.StatusCode == 409 {
+				fmt.Println("*** Error - Passenger", passengerid, "already in Ongoing Trip! *** ")
+			} else if res.StatusCode == 404 {
+				fmt.Println("*** Error - Passenger", passengerid, "does not exist! *** ")
 			}
 		} else {
-			fmt.Println(3, err)
+			fmt.Println(2, err)
 		}
-
 	} else {
-
-		fmt.Print("* No Drivers Available at the moment! *")
+		fmt.Println(3, err)
 	}
 }
 
@@ -562,6 +562,7 @@ func startTrip() {
 	var driverid string
 	var tripid string
 	viewDriverTrips()
+	fmt.Print("Enter Driver ID : ")
 	fmt.Scanf("%v\n", &driverid)
 	fmt.Print("Enter Trip ID : ")
 	fmt.Scanf("%v\n", &tripid)
@@ -597,6 +598,8 @@ func endTrip() {
 	var tripid string
 
 	viewDriverTrips()
+	fmt.Print("Enter Driver ID : ")
+	fmt.Scanf("%v\n", &driverid)
 	fmt.Print("Enter Trip ID : ")
 	fmt.Scanf("%v\n", &tripid)
 
@@ -606,8 +609,11 @@ func endTrip() {
 
 	postBody, _ := json.Marshal(updateTrip)
 
+	//parse multiple strings as parameters
+	url := fmt.Sprintf("http://localhost:3000/api/v1/driver/end/" + tripid + "/" + driverid)
+
 	client := &http.Client{}
-	if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/end/"+tripid+"/"+driverid, bytes.NewBuffer(postBody)); err == nil {
+	if req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(postBody)); err == nil {
 		if res, err := client.Do(req); err == nil {
 			if res.StatusCode == 202 {
 				fmt.Println("* Trip", tripid, "has ended! *")
@@ -645,6 +651,7 @@ func viewDriverTrips() {
 					fmt.Println("Pickup Code : ", v.StartPostalCode)
 					fmt.Println("Dropoff Code : ", v.EndPostalCode)
 					fmt.Println("Trip Status : ", v.TripStatus)
+					fmt.Print("\n")
 				}
 			}
 		}

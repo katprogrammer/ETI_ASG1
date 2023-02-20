@@ -23,6 +23,17 @@ type Passenger struct {
 	Email       string `json:"Email Address"`
 }
 
+type Driver struct {
+	DriverID     string `json:"Driver ID"`
+	FirstName    string `json:"First Name"`
+	LastName     string `json:"Last Name"`
+	PhoneNum     string `json:"Phone Number"`
+	Email        string `json:"Email"`
+	NRIC         string `json:"NRIC"`
+	LisenceNum   string `json:"License Number"`
+	DriverStatus string `json:"Driver Status"`
+}
+
 type Trip struct {
 	TripID          string `json:"Trip ID"`
 	StartPostalCode string `json:"Start Postal Code"`
@@ -55,7 +66,7 @@ func main() {
 	router.HandleFunc("/api/v1/passenger/update/{passengerid}", updatePassenger).Methods("PUT")
 
 	// Create new Trip
-	router.HandleFunc("/api/v1/passenger/trip/{tripid}/{passengerid}/{driverid}", createTrip).Methods("GET", "POST")
+	router.HandleFunc("/api/v1/passenger/trip/{tripid}/{passengerid}/{driverid}", createTrip).Methods("POST")
 
 	// List all Passenger Trips
 	router.HandleFunc("/api/v1/trip/{passengerid}", getTrip).Methods("GET")
@@ -185,43 +196,76 @@ func updatePassenger(w http.ResponseWriter, r *http.Request) {
 
 func createTrip(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-
+	var passengerID = ""
+	passengerID = params["passengerid"]
+	var tripID = ""
+	tripID = params["tripid"]
+	var driverID = ""
+	driverID = params["driverid"]
 	if r.Method == "POST" {
 		if body, err := ioutil.ReadAll(r.Body); err == nil {
 			var data Trip
 			if err := json.Unmarshal(body, &data); err == nil {
-				var passengerID = ""
-				passengerID = params["passengerid"]
-				db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
+				// db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/passenger_db")
+				// if err != nil {
+				// 	fmt.Println(err)
+				// }
+				// defer db.Close()
+				// populatePassenger(db)
+				// _, exists := passengerlist[passengerID]
+				// if exists {
+				//create trip if passenger is not currently in an ongoing trip
+				w.WriteHeader(http.StatusAccepted) //202
+				db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("failed to connect to db")
 				}
 				defer db.Close()
-				populatePassenger(db)
-				_, exists := passengerlist[passengerID]
-				if exists {
-					//create trip if passenger is not currently in an ongoing trip
-					w.WriteHeader(http.StatusAccepted) //202
-					db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/trips_db")
-					if err != nil {
-						fmt.Println("failed to connect to db")
-					}
-					defer db.Close()
+				// // Get Assigned Driver From Driver API
+				// assignedDriverMap := map[string]Driver{}
+				// resp, err := http.Get("http://localhost:3000/api/v1/drivers/")
+				// if err != nil {
+				// 	log.Fatalln(err)
+				// }
+				// body, err := ioutil.ReadAll(resp.Body)
+				// if err != nil {
+				// 	log.Fatalln(err)
+				// }
+				// // Add JSON to Driver Struct
+				// json.Unmarshal([]byte(body), &assignedDriverMap)
 
-					var triptime = time.Now()
+				// // Extract Assigned Driver Data
+				// var assignedDriverID string
+				// var assignedDriver Driver
 
-					_, err = db.Exec("INSERT into Trips (TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime, EndTime, PassengerID, DriverID) VALUES (?,?,?,?,?,?,?,?)", params["tripid"], data.StartPostalCode, data.EndPostalCode, data.TripStatus, triptime, params["passengerid"], params["driverid"])
-					if err != nil {
-						fmt.Println(err)
-					} else {
-						fmt.Println("New Trip Added")
-					}
+				// for key, element := range assignedDriverMap {
+				// 	assignedDriverID = key
+				// 	assignedDriver = element
+				// }
+
+				var triptime = time.Now()
+				var endTime = time.Now().Add(time.Hour * 5)
+				var tripstat = "Requested"
+
+				_, err = db.Exec("INSERT into Trips (TripID, StartPostalCode, EndPostalCode, TripStatus, StartTime, EndTime, PassengerID, DriverID) VALUES (?,?,?,?,?,?,?,?)", tripID, data.StartPostalCode, data.EndPostalCode, tripstat, triptime, endTime, passengerID, driverID)
+				if err != nil {
+					fmt.Println(err)
 				} else {
-					//if passenger not found, prompt to create passenger first
-					fmt.Println("Please create a Passenger First!")
-					w.WriteHeader(http.StatusNotFound) //404
 
+					fmt.Println("New Trip Added")
 				}
+				// data, err := json.Marshal(map[string]Driver{assignedDriverID: assignedDriver})
+				// if err != nil {
+				// 	log.Fatal(err)
+				// }
+				// fmt.Println(assignedDriver.FirstName)
+				fmt.Fprintf(w, "%s\n", data)
+				// } else {
+				// 	//if passenger not found, prompt to create passenger first
+				// 	fmt.Println("Please create a Passenger First!")
+				// 	w.WriteHeader(http.StatusNotFound) //404
+
+				// }
 			}
 		}
 	}

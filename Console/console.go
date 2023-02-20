@@ -462,7 +462,7 @@ func updateDriver() {
 
 }
 
-// Function - Create Trip Request, get single random Available driver, create trip record, update driver status to Busy
+// Function - Create Trip Request
 func createTrip() {
 	resp, err := http.Get("http://localhost:3000/api/v1/drivers/")
 	if err != nil {
@@ -544,7 +544,7 @@ func createTrip() {
 	}
 }
 
-// Function - Start a Trip, prompt for driver and trip id, change trip status to ongoing
+// Function - Start a Trip
 func startTrip() {
 
 	var updateTrip Trip
@@ -579,7 +579,7 @@ func startTrip() {
 
 }
 
-// Function - End a Trip, prompt for driver and trip id, change trip status to completed
+// Function - End a Trip
 func endTrip() {
 	var updateTrip Trip
 

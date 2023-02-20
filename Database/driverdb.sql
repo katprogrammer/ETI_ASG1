@@ -18,4 +18,4 @@ CREATE TABLE Drivers (
 INSERT INTO Drivers (DriverID, FirstName, LastName, PhoneNum, Email, NRIC, LisenceNum, DriverStatus) VALUES ("D1","Anita","Ryanto","92235566","anita@gmail.com","T1234567E","SLP1020G", "Available");
 INSERT INTO Drivers (DriverID, FirstName, LastName, PhoneNum, Email, NRIC, LisenceNum, DriverStatus) VALUES ("D2","Jackie","Chan","93381234","jackie@hotmail.com","T9876543E","NLB2020F", "Occupied");
 
-
+SELECT * FROM Drivers

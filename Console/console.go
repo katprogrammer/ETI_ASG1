@@ -479,7 +479,6 @@ func createTrip() {
 	for key, element := range assigndriver["Selected driver"] {
 		randomdriverid = key
 		randomdriver = element
-		fmt.Print(element.DriverID)
 	}
 	reader := bufio.NewReader(os.Stdin)
 	var newtrip Trip
@@ -512,36 +511,26 @@ func createTrip() {
 			if res.StatusCode == 202 {
 				fmt.Println("* New Trip:", randtripid, "created successfully! *")
 
-				// var updateBusy Driver
+				var updateBusy Driver
 
-				// updateBusy.DriverStatus = "Occupied"
+				updateBusy.DriverStatus = "Occupied"
 
-				// driverpostBody, _ := json.Marshal(updateBusy)
+				driverpostBody, _ := json.Marshal(updateBusy)
 
-				// if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/update/"+randomdriverid+"/occupied", bytes.NewBuffer(driverpostBody)); err == nil {
+				if req, err := http.NewRequest(http.MethodPut, "http://localhost:3000/api/v1/driver/update/"+randomdriverid+"/occupied", bytes.NewBuffer(driverpostBody)); err == nil {
 
-				// 	if res, err := client.Do(req); err == nil {
-				// 		if res.StatusCode == 202 {
-				// 			if len(assignDriver) != 0 {
-				// 				// Print Assigned Driver Details
-				// 				fmt.Println("\nSearch Complete!\n\n==========\nRide Details\n==========")
-				// 				for _, element := range assignDriver {
-				// 					fmt.Println("Driver Name: " + element.FirstName + " " + element.LastName + "\nMobile Number: " + element.PhoneNum + "\nEmail: " + element.Email + "\nCar License: " + element.LisenceNum + "\n\nPick-Up Postal Code: " + pickupcode + "\nDrop-Off Postal Code: " + dropoffcode)
-				// 				}
-				// 				fmt.Println("\nYour Driver will Arrive Shortly. Press any Key to Continue...")
-				// 				fmt.Scanln() // Wait for Keypress
-
-				// 			}
-				// 			fmt.Println("* A new driver is assigned to your trip! * ")
-				// 		} else if res.StatusCode == 404 {
-				// 			fmt.Println("* Driver does not exist! * ")
-				// 		}
-				// 	} else {
-				// 		fmt.Println(2, err)
-				// 	}
-				// } else {
-				// 	fmt.Println(3, err)
-				// }
+					if res, err := client.Do(req); err == nil {
+						if res.StatusCode == 202 {
+							fmt.Println("* A new driver is assigned to your trip! * ")
+						} else if res.StatusCode == 404 {
+							fmt.Println("* Driver does not exist! * ")
+						}
+					} else {
+						fmt.Println(2, err)
+					}
+				} else {
+					fmt.Println(3, err)
+				}
 			} else if res.StatusCode == 409 {
 				fmt.Println("*** Error - Passenger", passengerid, "already in Ongoing Trip! *** ")
 			} else if res.StatusCode == 404 {

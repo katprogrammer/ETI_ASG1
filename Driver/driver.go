@@ -139,7 +139,6 @@ func populateDriver(db *sql.DB) {
 func createDriver(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	params := mux.Vars(r)
-	// Retrieves the driverid specified in the API Endpoint which will be used to either Get, Post or Put.
 	var driverID = ""
 	driverID = params["driverid"]
 
@@ -207,7 +206,6 @@ func updateDriver(w http.ResponseWriter, r *http.Request) {
 func updateDriverStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	params := mux.Vars(r)
-	// Retrieves the driverid specified in the API Endpoint which will be used to either Get, Post or Put.
 	var driverID = ""
 	driverID = params["driverid"]
 

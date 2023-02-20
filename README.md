@@ -15,7 +15,7 @@ To enable persistent storage, MySQL can be used as the database management syste
 Here is an overview of how the ride-sharing platform with passenger, driver, and interface microservices can be implemented using MySQL for persistent storage:
 
 * Passenger Microservice:
-The Passenger microservice will handle passenger-related functionalities such as ride requests, cancellations, and ratings. It will communicate with the driver microservice to find an available driver for a ride request. The Passenger microservice will store passenger information, ride requests, and rating data in the MySQL database.
+The Passenger microservice will handle passenger-related functionalities such as ride requests, account creation and update account details. It will communicate with the driver microservice to find an available driver for a ride request. The Passenger microservice will store passenger information, ride requests, and rating data in the MySQL database.
 
 * Driver Microservice:
 The Driver microservice will handle driver-related functionalities such as accepting and completing ride requests. It will communicate with the Passenger microservice to receive ride requests and provide ride status updates. The Driver microservice will store driver information and ride history data in the MySQL database.

@@ -2,9 +2,28 @@
 
 ## Overview
 *** 
+This ride-sharing platform connects passengers with drivers so passengers can reach their destination. The platform typically consists of multiple components, including a frontend interface for passengers to request rides and for drivers to accept them, a backend server for processing ride requests and managing drivers, and a database for storing ride and driver information.
+
+In the case of using microservices architecture, each component of the ride-sharing platform can be designed and deployed as a separate microservice. For example, the frontend interface for passengers and drivers can be implemented as a separate microservice, and the backend server that processes ride requests can be another microservice. By splitting up the application into smaller, modular components, it becomes easier to maintain and scale the system as needed.
+
+To enable persistent storage, MySQL can be used as the database management system for the ride-sharing platform. MySQL is a popular relational database system that provides features such as ACID compliance, data replication, and data partitioning for horizontal scaling.
 
 ## Architecture Diagram
 *** 
+
+Here is an overview of how the ride-sharing platform with passenger, driver, and interface microservices can be implemented using MySQL for persistent storage:
+
+* Passenger Microservice:
+The Passenger microservice will handle passenger-related functionalities such as ride requests, cancellations, and ratings. It will communicate with the driver microservice to find an available driver for a ride request. The Passenger microservice will store passenger information, ride requests, and rating data in the MySQL database.
+
+* Driver Microservice:
+The Driver microservice will handle driver-related functionalities such as accepting and completing ride requests. It will communicate with the Passenger microservice to receive ride requests and provide ride status updates. The Driver microservice will store driver information and ride history data in the MySQL database.
+
+* Interface Microservice:
+The Interface microservice will provide the frontend interface for passengers and drivers to interact with the ride-sharing platform. It will communicate with the Passenger and Driver microservices to display ride information and handle user input. The Interface microservice will not store any data in the MySQL database but will retrieve data from the other microservices as needed.
+
+* MySQL Database:
+The MySQL databases will store all data related to passenger, driver and trip history information. The database will be managed by a database management system (DBMS) such as MySQL Server. The Passenger and Driver microservices will interact with the database through a MySQL connector library using go programming language
 
 ## Design Considerations using Domain Driven Design (DDD)
 *** 
@@ -27,22 +46,22 @@ The Driver domain represents the users of the platform who provide rides to pass
 
 Now let's see how these domains can be implemented using DDD principles:
 
-Bounded Contexts:
+* Bounded Contexts:
 In DDD, a bounded context represents a distinct area of the system where a certain domain concept is defined and used. For our ride-sharing platform, we can have two bounded contexts: Passenger context and Driver context. These bounded contexts will define the entities, services, and repositories related to Passenger and Driver domains.
 
-Entities:
+* Entities:
 Entities are objects with unique identities that have a lifecycle within a bounded context. In our ride-sharing platform, Passenger and Driver are entities. They will have unique identifiers, attributes, and actions associated with them.
 
-Services:
+* Services:
 Services are operations that don't fit well within a single entity but have meaning in the domain. For example, finding an available driver for a ride request is a service that involves both Passenger and Driver domains. This service can be defined in the Passenger bounded context and called by the application layer.
 
-Repositories:
+* Repositories:
 Repositories are objects that provide an abstraction layer over data storage. They allow us to work with entities without worrying about the underlying data storage. In our ride-sharing platform, we can have PassengerRepository and DriverRepository that handle the persistence of passenger and driver entities.
 
-Aggregate Roots:
+* Aggregate Roots:
 Aggregate roots are entities that act as a gateway to access other entities within the same bounded context. In our ride-sharing platform, Passenger and Driver can be aggregate roots. They will encapsulate the behavior of the entities within their respective domains.
 
-Domain-driven design can be implemented for a ride-sharing platform by identifying the primary domains (Passenger and Driver), defining bounded contexts for each domain, defining entities, services, repositories, and aggregate roots within each bounded context, and using these elements to build the application layer of the system. By applying DDD principles, we can build a system that models the ride-sharing domain accurately and provides a better user experience.
+* Domain-driven design can be implemented for a ride-sharing platform by identifying the primary domains (Passenger and Driver), defining bounded contexts for each domain, defining entities, services, repositories, and aggregate roots within each bounded context, and using these elements to build the application layer of the system. By applying DDD principles, we can build a system that models the ride-sharing domain accurately and provides a better user experience.
 
 ## API Documentation
 *** 

@@ -10,7 +10,7 @@ To enable persistent storage, MySQL can be used as the database management syste
 
 ## Architecture Diagram
 *** 
-![alt text](https://ibb.co/Gcb4Bmd)
+![alt text]("C:\Users\waike\Downloads\ETI\ASG1\ETI_ASG1\Architecture Diagram.jpg?")
 Here is an overview of how the ride-sharing platform with passenger, driver, and interface microservices can be implemented using MySQL for persistent storage:
 
 * Passenger Microservice:
